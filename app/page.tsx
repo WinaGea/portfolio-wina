@@ -1,6 +1,6 @@
 "use client";
 
-import { Document, Page, pdfjs } from "react-pdf";
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -15,12 +15,6 @@ import {
   FaSun,
 } from "react-icons/fa";
 import { FiCode, FiCpu, FiGitBranch, FiPenTool, FiBox, FiBarChart2 } from "react-icons/fi";
-
-/**
- * ✅ Worker yang aman untuk Next.js (biar tidak mismatch versi worker vs api)
- * Pastikan kamu sudah install: npm i react-pdf pdfjs-dist
- */
-
 
 /* ================== TYPES ================== */
 type Theme = "light" | "dark";
@@ -64,7 +58,7 @@ type Certificate = {
   title: string;
   issuer: string;
   year: string;
-  file: string; // contoh: "/sertifikat/1.pdf"
+  file: string;
 };
 
 /* ================== SKILLS DATA ================== */
@@ -101,8 +95,7 @@ const skills = [
     name: "UI / Interface Design",
     short: "Wireframe, Interface Layout, UX Flow",
     icon: <FiPenTool />,
-    detail:
-      "Designing clear and functional system interfaces, including IoT device casing interfaces and monitoring system layouts.",
+    detail: "Designing clear and functional system interfaces, including IoT device casing interfaces and monitoring system layouts.",
     tags: ["Interface Design", "User Flow", "Visual Layout"],
   },
   {
@@ -203,7 +196,6 @@ const projects: Project[] = [
       { src: "/job-website/layerusr.png", alt: "User Layer Architecture" },
     ],
   },
-
   {
     id: "hand-dryer",
     category: "academic",
@@ -257,8 +249,7 @@ const projects: Project[] = [
     role: "Console Application",
     summary:
       "A C-based console application for basic shop management, implementing CLI interaction, file handling for data persistence, and structured menu-driven operations.",
-    impact:
-      "Strengthens fundamental understanding of programming logic, data processing, and persistent data management using the C language.",
+    impact: "Strengthens fundamental understanding of programming logic, data processing, and persistent data management using the C language.",
     tech: ["C Programming Language", "File Handling (File I/O)", "Array & Control Flow"],
     tools: ["GCC Compiler", "Code Editor (VS Code / Dev-C++)"],
     images: [
@@ -268,7 +259,6 @@ const projects: Project[] = [
       { src: "/shop management/tambahan stok.png", alt: "Fitur penambahan stok" },
     ],
   },
-
   {
     id: "supporting-3d-air-quality-casing",
     category: "supporting",
@@ -366,11 +356,7 @@ const TIMELINE_DATA: TimelineItem[] = [
     location: "Del Institute of Technology",
     summary:
       "Actively involved as a member of HIMATEK, participating in student association activities that support academic engagement, collaboration, and community development among Computer Technology students.",
-    contributions: [
-      "Participated in organizational meetings and student programs",
-      "Supported the implementation of academic and social activities",
-      "Contributed to collaborative initiatives within the association",
-    ],
+    contributions: ["Participated in organizational meetings and student programs", "Supported the implementation of academic and social activities", "Contributed to collaborative initiatives within the association"],
     tags: ["Teamwork", "Community", "Organization"],
   },
   {
@@ -407,7 +393,7 @@ const TIMELINE_DATA: TimelineItem[] = [
   },
 ];
 
-/* ================= CERTIFICATE DATA (PASTIKAN TANPA public/) ================= */
+/* ================= CERTIFICATE DATA ================= */
 const certificates: Certificate[] = [
   { id: "huawei-datacom", title: "Huawei HCIA — Datacom V1.0 Course", issuer: "Huawei", year: "2025", file: "/sertifikat/1.pdf" },
   { id: "myskill-api", title: "API Introduction", issuer: "MySkill", year: "2025", file: "/sertifikat/2.pdf" },
@@ -433,6 +419,234 @@ function certIssuerKey(issuer: string) {
   if (s.includes("myskill")) return "myskill";
   if (s.includes("simplilearn")) return "simplilearn";
   return "default";
+}
+
+/* =======================================================
+   PDF VIEWER (SAFE) — NO top-level import react-pdf
+   ======================================================= */
+
+// load Document/Page only in browser (ssr:false)
+const PdfDocument = dynamic(() => import("react-pdf").then((m) => m.Document), { ssr: false });
+const PdfPage = dynamic(() => import("react-pdf").then((m) => m.Page), { ssr: false });
+
+type PdfViewerModalProps = {
+  open: boolean;
+  title?: string;
+  file?: string;
+  onClose: () => void;
+};
+
+function PdfViewerModal({ open, title, file, onClose }: PdfViewerModalProps) {
+  const [ready, setReady] = useState(false);
+
+  const [numPages, setNumPages] = useState(0);
+  const [page, setPage] = useState(1);
+  const [zoom, setZoom] = useState(1);
+  const [loadErr, setLoadErr] = useState<string | null>(null);
+
+  const frameRef = useRef<HTMLDivElement | null>(null);
+  const [frameWidth, setFrameWidth] = useState(900);
+  const [frameHeight, setFrameHeight] = useState(600);
+  const [pageSize, setPageSize] = useState<{ w: number; h: number } | null>(null);
+
+  const safeFile = useMemo(() => {
+    if (!file) return "";
+    const fixed = /^https?:\/\//i.test(file) ? file : file.startsWith("/") ? file : `/${file}`;
+    return encodeURI(fixed);
+  }, [file]);
+
+  // ✅ set pdfjs worker ONLY in browser & only when modal is open
+  useEffect(() => {
+    if (!open) return;
+    if (typeof window === "undefined") return;
+
+    let alive = true;
+
+    (async () => {
+      try {
+        const mod = await import("react-pdf");
+        const { pdfjs } = mod;
+
+        pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+          "pdfjs-dist/build/pdf.worker.min.mjs",
+          import.meta.url
+        ).toString();
+
+        if (alive) setReady(true);
+      } catch (e: any) {
+        if (alive) {
+          setLoadErr(e?.message || "Failed to initialize PDF viewer.");
+          setReady(false);
+        }
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [open]);
+
+  // reset when open/file changes
+  useEffect(() => {
+    if (!open) return;
+    setNumPages(0);
+    setPage(1);
+    setZoom(1);
+    setLoadErr(null);
+    setPageSize(null);
+  }, [open, safeFile]);
+
+  // lock body scroll when open
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  // frame resize observer
+  useEffect(() => {
+    if (!open) return;
+    const el = frameRef.current;
+    if (!el) return;
+
+    const update = () => {
+      setFrameWidth(Math.max(320, el.clientWidth || 900));
+      setFrameHeight(Math.max(320, el.clientHeight || 600));
+    };
+
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    update();
+
+    return () => ro.disconnect();
+  }, [open]);
+
+  // contain-fit scale
+  const fitScale = useMemo(() => {
+    if (!pageSize) return 1;
+    const pad = 24;
+    const availW = Math.max(320, frameWidth - pad);
+    const availH = Math.max(320, frameHeight - pad);
+
+    // contain -> pakai MIN, bukan MAX
+    return Math.min(availW / pageSize.w, availH / pageSize.h);
+  }, [pageSize, frameWidth, frameHeight]);
+
+  // keyboard shortcuts
+  useEffect(() => {
+    if (!open) return;
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") setPage((p) => Math.min(numPages || 1, p + 1));
+      if (e.key === "ArrowLeft") setPage((p) => Math.max(1, p - 1));
+      if (e.key === "+") setZoom((z) => Math.min(2.2, +(z + 0.1).toFixed(2)));
+      if (e.key === "-") setZoom((z) => Math.max(0.6, +(z - 0.1).toFixed(2)));
+      if (e.key === "0") setZoom(1);
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, numPages, onClose]);
+
+  if (!open || !safeFile) return null;
+
+  const prev = () => setPage((p) => Math.max(1, p - 1));
+  const next = () => setPage((p) => Math.min(numPages || 1, p + 1));
+
+  const zoomIn = () => setZoom((z) => Math.min(2.2, +(z + 0.1).toFixed(2)));
+  const zoomOut = () => setZoom((z) => Math.max(0.6, +(z - 0.1).toFixed(2)));
+  const zoomReset = () => setZoom(1);
+
+  return (
+    <div className="pdfm-backdrop" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="pdfm-shell" onClick={(e) => e.stopPropagation()}>
+        <div className="pdfm-topbar">
+          <button className="pdfm-iconbtn" type="button" aria-label="Menu" title="Menu">
+            ☰
+          </button>
+
+          <div className="pdfm-title" title={title || "Certificate"}>
+            {title || "Certificate"}
+          </div>
+
+          <div className="pdfm-spacer" />
+
+          <div className="pdfm-controls">
+            <span className="pdfm-page">
+              {page} / {numPages || 1}
+            </span>
+
+            <button className="pdfm-iconbtn" type="button" onClick={prev} title="Previous" disabled={page <= 1}>
+              ‹
+            </button>
+
+            <button className="pdfm-iconbtn" type="button" onClick={zoomOut} title="Zoom out">
+              –
+            </button>
+
+            <span className="pdfm-zoom">{Math.round(zoom * 100)}%</span>
+
+            <button className="pdfm-iconbtn" type="button" onClick={zoomIn} title="Zoom in">
+              +
+            </button>
+
+            <button className="pdfm-iconbtn" type="button" onClick={zoomReset} title="Reset zoom (0)">
+              ↺
+            </button>
+
+            <button className="pdfm-iconbtn" type="button" onClick={next} title="Next" disabled={page >= (numPages || 1)}>
+              ›
+            </button>
+
+            <a className="pdfm-iconbtn" href={safeFile} download title="Download">
+              ⤓
+            </a>
+
+            <button className="pdfm-close" type="button" onClick={onClose}>
+              Close
+            </button>
+          </div>
+        </div>
+
+        <div className="pdfm-bodyOne">
+          <div className="pdfm-frameWrap" ref={frameRef}>
+            {!ready ? (
+              <div className="pdfm-loading">Loading…</div>
+            ) : loadErr ? (
+              <div className="pdfm-error">
+                <strong>PDF tidak bisa dibuka.</strong>
+                <div>{loadErr}</div>
+              </div>
+            ) : (
+              <PdfDocument
+                key={safeFile}
+                file={safeFile}
+                onLoadSuccess={({ numPages }: any) => {
+                  setNumPages(numPages);
+                  setPage((p) => Math.min(Math.max(1, p), numPages));
+                }}
+                onLoadError={(err: any) => setLoadErr(err?.message || "Unknown error")}
+                loading={<div className="pdfm-loading">Loading…</div>}
+              >
+                <PdfPage
+                  pageNumber={page}
+                  scale={fitScale * zoom}
+                  onLoadSuccess={(p: any) => setPageSize({ w: p.originalWidth, h: p.originalHeight })}
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
+                  loading={<div className="pdfm-loading">Rendering…</div>}
+                />
+              </PdfDocument>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ================== SKILLS COMPONENT ================== */
@@ -588,211 +802,6 @@ function ExperienceSection() {
   );
 }
 
-
-/** ✅ Worker aman (hindari mismatch versi) */
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
-
-type PdfViewerModalProps = {
-  open: boolean;
-  title?: string;
-  file?: string;
-  onClose: () => void;
-};
-
-function PdfViewerModal({ open, title, file, onClose }: PdfViewerModalProps) {
-  const [numPages, setNumPages] = useState(0);
-  const [page, setPage] = useState(1);
-
-  // zoom user (multiplier)
-  const [zoom, setZoom] = useState(1); // 1 = 100%
-  const [loadErr, setLoadErr] = useState<string | null>(null);
-
-  // ukuran frame viewer (untuk fit)
-  const frameRef = useRef<HTMLDivElement | null>(null);
-  const [frameWidth, setFrameWidth] = useState(900);
-  const [frameHeight, setFrameHeight] = useState(600);
-
-  // ukuran asli halaman PDF (untuk hitung scale)
-  const [pageSize, setPageSize] = useState<{ w: number; h: number } | null>(null);
-
-  const safeFile = useMemo(() => {
-    if (!file) return "";
-    const fixed = /^https?:\/\//i.test(file)
-      ? file
-      : file.startsWith("/")
-      ? file
-      : `/${file}`;
-    return encodeURI(fixed);
-  }, [file]);
-
-  // reset saat modal dibuka / file berubah
-  useEffect(() => {
-    if (!open) return;
-    setNumPages(0);
-    setPage(1);
-    setZoom(1);
-    setLoadErr(null);
-    setPageSize(null);
-  }, [open, safeFile]);
-
-  // lock scroll body saat modal open
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [open]);
-
-  // ukur frame viewer (width + height)
-  useEffect(() => {
-    if (!open) return;
-    const el = frameRef.current;
-    if (!el) return;
-
-    const update = () => {
-      setFrameWidth(Math.max(320, el.clientWidth || 900));
-      setFrameHeight(Math.max(320, el.clientHeight || 600));
-    };
-
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    update();
-
-    return () => ro.disconnect();
-  }, [open]);
-
-  // ✅ scale dasar agar PDF “muat sekotak” (contain), lalu dikali zoom
-  const fitScale = useMemo(() => {
-    if (!pageSize) return 1;
-
-    const pad = 24; // padding frameWrap 12 + 12 (samakan dengan CSS)
-    const availW = Math.max(320, frameWidth - pad);
-    const availH = Math.max(320, frameHeight - pad);
-
-    return Math.max(availW / pageSize.w, availH / pageSize.h);
-
-  }, [pageSize, frameWidth, frameHeight]);
-
-  // keyboard shortcuts
-  useEffect(() => {
-    if (!open) return;
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-
-      if (e.key === "ArrowRight") setPage((p) => Math.min(numPages || 1, p + 1));
-      if (e.key === "ArrowLeft") setPage((p) => Math.max(1, p - 1));
-
-      if (e.key === "+") setZoom((z) => Math.min(2.2, +(z + 0.1).toFixed(2)));
-      if (e.key === "-") setZoom((z) => Math.max(0.6, +(z - 0.1).toFixed(2)));
-      if (e.key === "0") setZoom(1); // reset zoom cepat
-    };
-
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, numPages, onClose]);
-
-  if (!open || !safeFile) return null;
-
-  const prev = () => setPage((p) => Math.max(1, p - 1));
-  const next = () => setPage((p) => Math.min(numPages || 1, p + 1));
-
-  const zoomIn = () => setZoom((z) => Math.min(2.2, +(z + 0.1).toFixed(2)));
-  const zoomOut = () => setZoom((z) => Math.max(0.6, +(z - 0.1).toFixed(2)));
-  const zoomReset = () => setZoom(1);
-
-  return (
-    <div className="pdfm-backdrop" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="pdfm-shell" onClick={(e) => e.stopPropagation()}>
-        <div className="pdfm-topbar">
-          <button className="pdfm-iconbtn" type="button" aria-label="Menu" title="Menu">
-            ☰
-          </button>
-
-          <div className="pdfm-title" title={title || "Certificate"}>
-            {title || "Certificate"}
-          </div>
-
-          <div className="pdfm-spacer" />
-
-          <div className="pdfm-controls">
-            <span className="pdfm-page">
-              {page} / {numPages || 1}
-            </span>
-
-            <button className="pdfm-iconbtn" type="button" onClick={prev} title="Previous" disabled={page <= 1}>
-              ‹
-            </button>
-
-            <button className="pdfm-iconbtn" type="button" onClick={zoomOut} title="Zoom out">
-              –
-            </button>
-
-            <span className="pdfm-zoom">{Math.round(zoom * 100)}%</span>
-
-            <button className="pdfm-iconbtn" type="button" onClick={zoomIn} title="Zoom in">
-              +
-            </button>
-
-            <button className="pdfm-iconbtn" type="button" onClick={zoomReset} title="Reset zoom (0)">
-              ↺
-            </button>
-
-            <button className="pdfm-iconbtn" type="button" onClick={next} title="Next" disabled={page >= (numPages || 1)}>
-              ›
-            </button>
-
-            <a className="pdfm-iconbtn" href={safeFile} download title="Download">
-              ⤓
-            </a>
-
-            <button className="pdfm-close" type="button" onClick={onClose}>
-              Close
-            </button>
-          </div>
-        </div>
-
-        <div className="pdfm-bodyOne">
-          <div className="pdfm-frameWrap" ref={frameRef}>
-            {loadErr ? (
-              <div className="pdfm-error">
-                <strong>PDF tidak bisa dibuka.</strong>
-                <div>{loadErr}</div>
-              </div>
-            ) : (
-              <Document
-                key={safeFile}
-                file={safeFile}
-                onLoadSuccess={({ numPages }) => {
-                  setNumPages(numPages);
-                  setPage((p) => Math.min(Math.max(1, p), numPages));
-                }}
-                onLoadError={(err) => setLoadErr(err?.message || "Unknown error")}
-                loading={<div className="pdfm-loading">Loading…</div>}
-              >
-                <Page
-                  pageNumber={page}
-                  scale={fitScale * zoom}
-                  onLoadSuccess={(p) => setPageSize({ w: p.originalWidth, h: p.originalHeight })}
-                  renderTextLayer={false}
-                  renderAnnotationLayer={false}
-                  loading={<div className="pdfm-loading">Rendering…</div>}
-                />
-              </Document>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
 /*================ CERTIFICATES SECTION ================= */
 function CertificatesSection() {
   const [open, setOpen] = useState(false);
@@ -841,7 +850,6 @@ function CertificatesSection() {
     </section>
   );
 }
-/* =
 
 /* ================== PROJECT CARD ================== */
 function ProjectCard({ project }: { project: Project }) {
@@ -938,12 +946,7 @@ function ProjectCard({ project }: { project: Project }) {
       {isZoomOpen && current && (
         <div className="image-lightbox-backdrop" onClick={() => setIsZoomOpen(false)}>
           <div className="image-lightbox-inner" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              className="image-lightbox-close"
-              onClick={() => setIsZoomOpen(false)}
-              aria-label="Close image"
-            >
+            <button type="button" className="image-lightbox-close" onClick={() => setIsZoomOpen(false)} aria-label="Close image">
               ✕
             </button>
 

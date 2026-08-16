@@ -1236,7 +1236,7 @@ function EducationSection({ ui }: { ui: UIText }) {
             <div className="edu2-school">Del Institute of Technology — Sitoluama, Laguboti, Toba</div>
 
             <div className="edu2-meta">
-              <p className="edu2-meta--date">Aug 2023 — Sep 2026 ({ui.expected})</p>
+              <p className="edu2-meta--date">Aug 2023 — Sep 2026</p>
 
               <p className="edu2-meta--gpa">
                 <strong>{ui.gpa}:</strong> 3.30 / 4.00

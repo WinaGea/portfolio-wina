@@ -1674,6 +1674,11 @@ body.theme-dark .projects-group-icon {
 /* ================================
    PDF MODAL — clean dark viewer (fixed)
 ================================ */
+/* =========================================================
+   PDF MODAL (PDFM) — FULL CSS (READY TO COPY)
+   Fix: mobile full-screen, close button always visible,
+   pdf fits screen (no crop), smooth scroll on phone
+========================================================= */
 
 /* backdrop */
 .pdfm-backdrop{
@@ -1703,6 +1708,7 @@ body.theme-dark .projects-group-icon {
 /* topbar */
 .pdfm-topbar{
   height: 56px;
+  flex-shrink: 0;              /* ✅ biar topbar tidak mengecil */
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1752,37 +1758,18 @@ body.theme-dark .projects-group-icon {
   cursor: pointer;
 }
 
-/* ======================
+/* =========================================================
    BODY (2 columns)
-====================== */
-
-/* kalau kamu pakai versi iframe yang aku kasih:
-   BODY class-nya: .pdfm-body2
-*/
-.pdfm-frameWrap{
-  overflow: hidden;          /* ✅ biar crop, bukan scroll */
-  display: grid;
-  place-items: center;
-  padding: 12px;
-}
-
-
-.pdfm-frameWrap canvas{
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 18px 40px rgba(0,0,0,.35);
-}
-
-
+========================================================= */
 
 .pdfm-body2{
   flex: 1;
-  min-height: 0;                 /* penting biar scroll bener */
+  min-height: 0;                 /* ✅ penting agar scroll benar */
   display: grid;
   grid-template-columns: 280px 1fr;
 }
 
-/* left */
+/* left (thumbnails) */
 .pdfm-side{
   background: rgba(255,255,255,0.04);
   border-right: 1px solid rgba(255,255,255,0.10);
@@ -1826,7 +1813,7 @@ body.theme-dark .projects-group-icon {
   border: 1px solid rgba(255,255,255,0.08);
 }
 
-/* bikin isi iframe “zoom” biar keliatan kayak thumbnail */
+/* zoom thumbnail */
 .pdfm-thumbFrame{
   width: 160%;
   height: 160%;
@@ -1836,27 +1823,44 @@ body.theme-dark .projects-group-icon {
   background: white;
 }
 
-/* right */
+/* right (viewer) */
 .pdfm-main{
   padding: 14px;
   min-height: 0;
-  overflow: hidden;              /* supaya iframe aja yang ngatur */
+  overflow: auto;               /* ✅ ganti hidden -> auto agar pdf bisa scroll */
+  -webkit-overflow-scrolling: touch;
 }
 
+/* viewer wrapper */
 .pdfm-frameWrap{
   width: 100%;
   height: 100%;
   border-radius: 16px;
-  overflow: hidden;
+  overflow: hidden;             /* desktop: rapi */
   background: rgba(0,0,0,0.30);
   border: 1px solid rgba(255,255,255,0.10);
+
+  display: grid;
+  place-items: center;
+  padding: 12px;
 }
 
+/* canvas (react-pdf) */
+.pdfm-frameWrap canvas{
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.35);
+  max-width: 100%;
+  height: auto !important;
+}
+
+/* iframe (pdf) */
 .pdfm-frame{
   width: 100%;
   height: 100%;
   border: 0;
   background: white;
+  border-radius: 14px;
 }
 
 /* fallback text */
@@ -1865,886 +1869,542 @@ body.theme-dark .projects-group-icon {
   padding: 18px;
 }
 
-
-/* responsive */
+/* =========================================================
+   RESPONSIVE — FIX MOBILE (CLOSE ALWAYS VISIBLE)
+========================================================= */
 @media (max-width: 860px){
-  .pdfm-shell{
-    width: 96vw;
-    height: 92vh;
+
+  /* modal full screen */
+  .pdfm-backdrop{
+    padding: 0;                  /* ✅ biar tidak kepotong */
   }
+
+  .pdfm-shell{
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+  }
+
+  /* topbar sticky */
+  .pdfm-topbar{
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    height: 52px;
+    padding: 8px 10px;
+  }
+
+  .pdfm-title{
+    max-width: 52vw;
+    font-size: 13px;
+  }
+
+  .pdfm-close{
+    height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
+  /* one column */
   .pdfm-body2{
     grid-template-columns: 1fr;
   }
+
+  /* hide sidebar on phone */
   .pdfm-side{
-    border-right: 0;
-    border-bottom: 1px solid rgba(255,255,255,0.10);
+    display: none;
   }
-  .pdfm-thumbFrameWrap{
-    height: 160px;
+
+  .pdfm-main{
+    padding: 10px;
+    overflow: auto;
+  }
+
+  /* IMPORTANT: stop cropping on phone */
+  .pdfm-frameWrap{
+    overflow: visible;           /* ✅ supaya tidak kepotong */
+    padding: 8px;
+    height: auto;
+    border-radius: 14px;
+  }
+
+  /* iframe height fits viewport */
+  .pdfm-frame{
+    height: calc(100vh - 52px - 20px); /* viewport - topbar - padding */
+    border-radius: 12px;
+  }
+
+  /* OPTIONAL: agar control tidak penuh */
+  .pdfm-controls{
+    gap: 6px;
+  }
+
+  /* OPTIONAL: sembunyikan iconbtn selain 1 tombol pertama */
+  /* kalau mau tetap tampil semua, hapus block ini */
+  .pdfm-controls .pdfm-iconbtn:not(:first-child){
+    display: none;
   }
 }
 
 
-
 /* ================================
-   EXPERIENCE & ACTIVITIES (TIMELINE)
-   Classes: .ea-*
-   Support: body.theme-light / body.theme-dark
+   EXPERIENCE & ACTIVITIES (EA2) - PREMIUM
+   Glass + soft gradient + accent strip
 ================================ */
 
-/* spacing wrapper */
-.ea-wrap {
+/* Wrapper */
+.ea2-wrap{
   padding: 28px 18px;
+  margin-top: 40px;
 }
 
-.ea-head {
-  max-width: 1100px;
-  margin: 0 auto 16px;
-}
-
-.ea-title {
-  font-size: 32px;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  margin: 0 0 6px;
-}
-
-.ea-subtitle {
-  font-size: 0.9rem;
-  color: #9ca3af;          /* abu-abu lebih soft */
-  font-weight: 400;
-}
-
-/* controls row */
-.ea-controls {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-
-/* tabs pill */
-.ea-tabs {
-  display: inline-flex;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 999px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(120, 90, 255, 0.18);
-  background: rgba(255, 255, 255, 0.55);
-}
-
-.ea-tab {
-  border: 0;
-  background: transparent;
-  padding: 10px 14px;
-  border-radius: 999px;
-  font-weight: 800;
-  cursor: pointer;
-  opacity: 0.72;
-  transition: transform 120ms ease, opacity 120ms ease;
-}
-
-.ea-tab:hover {
-  transform: translateY(-1px);
-  opacity: 0.92;
-}
-
-.ea-tab.is-active {
-  opacity: 1;
-  background: rgba(120, 90, 255, 0.16);
-  border: 1px solid rgba(120, 90, 255, 0.22);
-}
-
-/* search */
-.ea-search {
-  flex: 1;
-  min-width: 260px;
-  max-width: 640px;
-}
-
-.ea-search input {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 999px;
-  outline: none;
-  border: 1px solid rgba(120, 90, 255, 0.18);
-  background: rgba(255, 255, 255, 0.65);
-  transition: border-color 140ms ease, transform 140ms ease;
-}
-
-.ea-search input:focus {
-  border-color: rgba(120, 90, 255, 0.35);
-  transform: translateY(-1px);
-}
-
-/* tag chips */
-.ea-tags {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding: 8px 0 0;
-}
-
-.ea-chip {
-  border: 1px solid rgba(120, 90, 255, 0.18);
-  background: rgba(255, 255, 255, 0.55);
-  padding: 8px 12px;
-  border-radius: 999px;
-  cursor: pointer;
-  font-weight: 750;
-  opacity: 0.78;
-  transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
-}
-
-.ea-chip:hover {
-  transform: translateY(-1px);
-  opacity: 0.92;
-}
-
-.ea-chip.is-active {
-  opacity: 1;
-  background: rgba(120, 90, 255, 0.16);
-  border-color: rgba(120, 90, 255, 0.28);
-}
-
-/* layout grid */
-.ea-grid {
-  max-width: 1100px;
-  margin: 14px auto 0;
-  display: grid;
-  grid-template-columns: 1.05fr 1.25fr;
-  gap: 16px;
-}
-
-/* left panel */
-.ea-timeline {
-  position: relative;
-  padding: 14px 10px 14px 22px;
-  border-radius: 22px;
-  border: 1px solid rgba(120, 90, 255, 0.14);
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(10px);
-  min-height: 240px;
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.06);
-}
-
-/* vertical line */
-.ea-timeline::before {
-  content: "";
-  position: absolute;
-  top: 18px;
-  bottom: 18px;
-  left: 16px;
-  width: 2px;
-  background: rgba(120, 90, 255, 0.18);
-  border-radius: 999px;
-}
-
-/* item button */
-.ea-item {
-  width: 100%;
-  text-align: left;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  display: grid;
-  grid-template-columns: 18px 1fr;
-  gap: 10px;
-  padding: 10px 10px;
-  border-radius: 16px;
-}
-
-/* dot */
-.ea-dot {
-  width: 12px;
-  height: 12px;
-  margin-top: 6px;
-  border-radius: 999px;
-  background: rgba(120, 90, 255, 0.58);
-  box-shadow: 0 0 0 4px rgba(120, 90, 255, 0.10);
-}
-
-/* card */
-.ea-card {
-  border: 1px solid rgba(120, 90, 255, 0.14);
-  background: rgba(255, 255, 255, 0.62);
-  border-radius: 16px;
-  padding: 12px 12px;
-  transition: transform 140ms ease, background 140ms ease, border 140ms ease;
-}
-
-.ea-item:hover .ea-card {
-  transform: translateY(-1px);
-  border-color: rgba(120, 90, 255, 0.22);
-}
-
-.ea-item.is-active .ea-card {
-  border-color: rgba(120, 90, 255, 0.34);
-  background: rgba(120, 90, 255, 0.10);
-}
-
-.ea-role {
-  display: block;
-  font-weight: 900;
-  margin-bottom: 2px;
-}
-
-.ea-org {
-  display: block;
-  opacity: 0.82;
-  margin-bottom: 6px;
-}
-
-.ea-meta {
-  display: block;
-  opacity: 0.72;
-  font-size: 13px;
-}
-
-/* right detail panel */
-.ea-detail-card {
-  border-radius: 24px;
-  padding: 18px 18px;
-  min-height: 240px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.10);
-}
-
-/* detail text */
-.ea-detail-top {
-  margin-bottom: 12px;
-}
-
-.ea-detail-role {
-  margin: 0 0 6px;
-  font-size: 24px;
-  font-weight: 950;
-  letter-spacing: -0.02em;
-}
-
-.ea-detail-org {
-  font-weight: 750;
-  margin-bottom: 4px;
-  opacity: 0.92;
-}
-
-.ea-detail-meta {
-  font-size: 13px;
-  opacity: 0.78;
-}
-
-.ea-detail-summary {
-  margin: 12px 0 16px;
-  line-height: 1.75;
-  opacity: 0.94;
-}
-
-.ea-detail-label {
-  font-weight: 950;
-  letter-spacing: 0.10em;
-  font-size: 12px;
-  opacity: 0.86;
-  margin-bottom: 10px;
-}
-
-.ea-detail-list {
-  margin: 0;
-  padding-left: 18px;
-  line-height: 1.8;
-  opacity: 0.95;
-}
-
-.ea-detail-tags {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 14px;
-}
-
-.ea-pill {
-  padding: 7px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 650;
-}
-
-.ea-empty {
-  padding: 16px;
-  opacity: 0.78;
-}
-
-/* ================================
-   THEME: LIGHT
-================================ */
-body.theme-light .ea-wrap {
-  color: #171829;
-}
-
-body.theme-light .ea-detail-card {
-  background: rgba(20, 22, 35, 0.86);
-  color: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(120, 90, 255, 0.18);
-}
-
-body.theme-light .ea-pill {
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.10);
-  color: rgba(255, 255, 255, 0.92);
-}
-
-/* ================================
-   THEME: DARK
-================================ */
-body.theme-dark .ea-wrap {
-  color: rgba(255, 255, 255, 0.92);
-}
-
-body.theme-dark .ea-tabs,
-body.theme-dark .ea-search input,
-body.theme-dark .ea-chip,
-body.theme-dark .ea-timeline,
-body.theme-dark .ea-card {
-  background: rgba(14, 16, 26, 0.55);
-  border-color: rgba(180, 160, 255, 0.18);
-}
-
-body.theme-dark .ea-subtitle,
-body.theme-dark .ea-org,
-body.theme-dark .ea-meta {
-  opacity: 0.82;
-}
-
-body.theme-dark .ea-timeline::before {
-  background: rgba(180, 160, 255, 0.22);
-}
-
-body.theme-dark .ea-dot {
-  background: rgba(180, 160, 255, 0.60);
-  box-shadow: 0 0 0 4px rgba(180, 160, 255, 0.12);
-}
-
-body.theme-dark .ea-item.is-active .ea-card {
-  background: rgba(180, 160, 255, 0.12);
-  border-color: rgba(180, 160, 255, 0.30);
-}
-
-body.theme-dark .ea-detail-card {
-  background: rgba(10, 12, 20, 0.88);
-  border: 1px solid rgba(180, 160, 255, 0.22);
-  color: rgba(255, 255, 255, 0.92);
-}
-
-body.theme-dark .ea-pill {
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.92);
-}
-
-/* ================================
-   RESPONSIVE
-================================ */
-@media (max-width: 980px) {
-  .ea-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .ea-search {
-    max-width: none;
-  }
-
-  .ea-title {
-    font-size: 28px;
-  }
-}
-
-@media (max-width: 520px) {
-  .ea-wrap {
-    padding: 22px 14px;
-  }
-
-  .ea-tab {
-    padding: 9px 12px;
-  }
-
-  .ea-search input {
-    padding: 11px 12px;
-  }
-
-  .ea-card {
-    padding: 11px 11px;
-  }
-
-  .ea-detail-card {
-    padding: 16px 14px;
-  }
-}
-
-/* ================================
-   EXPERIENCE & ACTIVITIES (SIMPLE)
-   Timeline Accordion Full-width
-   No Search, No Tabs
-================================ */
-
-/* Tambah jarak atas section Experience */
-.ea2-wrap {
-  /* samakan feel dengan section content */
-  padding: 28px 18px;   /* biar sejajar kiri-kanan */
-  margin-top: 56px;     /* jarak dari atas */
-}
-
-.ea2-head { max-width: 1100px; margin: 0 auto 14px; }
-
+/* Header/body width */
 .ea2-head,
-.ea2-body {
+.ea2-body{
   max-width: 1100px;
   margin-left: auto;
   margin-right: auto;
 }
 
-.ea2-title {
-  font-size: 1.5rem;
-  font-weight: 900;
+.ea2-head{ margin-bottom: 12px; }
+
+.ea2-title{
+  font-size: 1.65rem;
+  font-weight: 950;
   letter-spacing: -0.02em;
-  margin: 0 0 8px;
   margin-bottom: 6px;
 }
-.ea2-line {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 16px;
-}
-.ea2-subtitle {
-  margin: 0 0 16px;
+
+
+.ea2-subtitle{
+  margin: 0 0 14px;
   line-height: 1.65;
-  opacity: 0.75;
-  font-size: 15px;
-  max-width: 760px;
+  opacity: 0.72;
+  font-size: 0.95rem;
+  max-width: 720px;
 }
 
-/* tag chips */
-.ea2-tags {
+.ea2-hint{
+  margin: 10px 0 0;
+  font-size: 13px;
+  opacity: 0.65;
+}
+
+/* Tag filters */
+.ea2-tags{
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-  padding: 6px 0 0;
-  padding-left: 0;
-  margin-left: 0;
+  padding: 10px 0 0;
+  margin: 0;
 }
 
-.ea2-chip {
-  border: 1px solid rgba(120, 90, 255, 0.18);
+.ea2-chip{
+  border: 1px solid rgba(120, 90, 255, 0.16);
   background: rgba(255, 255, 255, 0.55);
-  padding: 9px 14px;
+  padding: 10px 16px;
   border-radius: 999px;
   cursor: pointer;
-  font-weight: 780;
-  opacity: 0.78;
-  transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
+  font-weight: 820;
+  opacity: 0.85;
+  transition: transform 140ms ease, opacity 140ms ease, background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
 }
 
-.ea2-chip:hover { transform: translateY(-1px); opacity: 0.92; }
-
-.ea2-chip.is-active {
+.ea2-chip:hover{
+  transform: translateY(-1px);
   opacity: 1;
-  background: rgba(120, 90, 255, 0.16);
-  border-color: rgba(120, 90, 255, 0.28);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.06);
 }
 
-/* body panel */
-.ea2-body { max-width: 1100px; margin: 10px auto 0; }
+.ea2-chip.is-active{
+  opacity: 1;
+  background: rgba(120, 90, 255, 0.14);
+  border-color: rgba(120, 90, 255, 0.30);
+  box-shadow: 0 10px 26px rgba(120,90,255,0.14);
+}
 
-.ea2-timeline {
-  position: relative;
-  border-radius: 24px;
+/* Timeline container (lebih “sekelas” sama hero/skills) */
+.ea2-body{ margin-top: 12px; }
+
+.ea2-timeline{
+  border-radius: 26px;
   border: 1px solid rgba(120, 90, 255, 0.14);
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.06);
-  padding: 14px 14px;
-  padding-left: 10px;
+  background:
+    radial-gradient(1200px 400px at 20% 0%, rgba(120,90,255,0.14), transparent 60%),
+    radial-gradient(900px 300px at 90% 30%, rgba(160,220,255,0.16), transparent 55%),
+    rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.08);
+  padding: 14px;
 }
 
-.ea2-timeline::before {
-  display: none !important;
+/* Item (lebih rapat, biar scroll ringkas) */
+.ea2-item{
+  border-radius: 18px;
+  overflow: hidden;
+  margin: 10px 0; /* ✅ dari 14px → 10px */
 }
 
-.ea2-item { border-radius: 18px; overflow: hidden; margin: 10px 0; margin-top: 14px;}
-
-.ea2-row {
+/* Row button */
+.ea2-row{
   width: 100%;
   text-align: left;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
-  align-items: center;
-  border: 1px solid rgba(120, 90, 255, 0.14);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+
+  border: 1px solid rgba(120, 90, 255, 0.12);
   background: rgba(255, 255, 255, 0.62);
-  padding: 14px 14px;
-  padding-top: 16px;
-  padding-bottom: 16px;
-  padding-left: 1px;
+  padding: 16px;
   border-radius: 18px;
   cursor: pointer;
-  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+
+  position: relative;
+  overflow: hidden;
+
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 
-.ea2-row:hover { transform: translateY(-1px); border-color: rgba(120, 90, 255, 0.22); }
-
-.ea2-item.is-open .ea2-row {
-  background: rgba(120, 90, 255, 0.10);
-  border-color: rgba(120, 90, 255, 0.32);
-}
-.ea2-period {
-  font-size: 13.5px;
-  font-weight: 700;
-  white-space: nowrap;
-  opacity: 0.85;
+.ea2-row:hover{
+  transform: translateY(-1px);
+  border-color: rgba(120, 90, 255, 0.22);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.08);
 }
 
-/* location di bawah */
-.ea2-location {
-  margin-top: 4px;
-  font-size: 0.8rem;
-  opacity: 0.75;
-}
-.ea2-dot {
-  width: 12px;
-  height: 12px;
+/* Accent strip (kaya card premium) */
+.ea2-strip{
+  width: 10px;
   border-radius: 999px;
-  background: rgba(120, 90, 255, 0.58);
-  box-shadow: 0 0 0 4px rgba(120, 90, 255, 0.10);
-  margin-left: 6px;
-  display: none;
+  flex-shrink: 0;
+  margin-top: 2px;
+  background: linear-gradient(180deg, rgba(120,90,255,0.55), rgba(120,90,255,0.10));
+  box-shadow: 0 10px 20px rgba(120,90,255,0.18);
 }
 
-.ea2-role {
-  font-size: 0.98rem;
-  font-weight: 800;
-  line-height: 1.4;
+/* Featured: cukup glow + sedikit beda, badge kecil */
+.ea2-item.is-featured .ea2-row{
+  border-color: rgba(120, 90, 255, 0.26);
+  background: rgba(190, 200, 255, 0.18);
+  box-shadow: 0 18px 44px rgba(120,90,255,0.16);
+}
+
+.ea2-item.is-featured .ea2-strip{
+  background: linear-gradient(180deg, rgba(255,231,147,0.70), rgba(120,90,255,0.12));
+  box-shadow: 0 12px 24px rgba(255,231,147,0.18);
+}
+
+.ea2-item.is-open .ea2-row{
+  background: rgba(120, 90, 255, 0.06);
+  border-color: rgba(120, 90, 255, 0.26);
+}
+
+/* Main content */
+.ea2-main{
+  flex: 1;
+  min-width: 0;
+}
+
+/* Top line */
+.ea2-top{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 6px;
 }
-.ea2-org {
-  font-size: 0.87rem;
-  font-weight: 500;
+
+.ea2-role{
+  font-size: 1.05rem;
+  font-weight: 950;
+  line-height: 1.25;
+  margin: 0;
 }
-.ea2-meta { display: block; opacity: 0.72; font-size: 13px; }
 
-.ea2-caret { font-weight: 900; font-size: 22px; opacity: 0.7; margin-right: 4px; }
+/* Badges - status lebih dominan */
+.ea2-badges{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
 
-/* accordion panel */
-.ea2-panel {
+.ea2-badge{
+  font-size: 12px;
+  font-weight: 850;
+  padding: 6px 10px;
+  border-radius: 999px;
+  line-height: 1;
+  white-space: nowrap;
+  border: 1px solid rgba(15,23,42,0.08);
+  background: rgba(255,255,255,0.70);
+  color: rgba(15,23,42,0.78);
+}
+
+/* Featured jadi lebih kecil + subtle */
+.ea2-badge--featured{
+  font-size: 11px;
+  padding: 5px 9px;
+  background: rgba(255, 231, 147, 0.28);
+  border-color: rgba(255, 231, 147, 0.55);
+  color: rgba(120, 75, 10, 0.86);
+}
+
+/* Status tetap paling “terlihat” */
+.ea2-badge--current{
+  background: rgba(168, 255, 214, 0.35);
+  border-color: rgba(168, 255, 214, 0.60);
+}
+
+.ea2-badge--done{
+  background: rgba(210, 220, 255, 0.38);
+  border-color: rgba(210, 220, 255, 0.65);
+}
+
+/* Org + period */
+.ea2-line{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.ea2-org{
+  font-size: 0.88rem;
+  font-weight: 650;
+  opacity: 0.92;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ea2-period{
+  font-size: 13.5px;
+  font-weight: 900;
+  opacity: 0.86;
+  white-space: nowrap;
+}
+
+/* Location */
+.ea2-location{
+  margin-top: 4px;
+  font-size: 0.82rem;
+  opacity: 0.72;
+}
+
+/* Peek summary (lebih ringan: teaser) */
+.ea2-peek{
+  margin-top: 8px;
+  font-size: 0.86rem;     /* ✅ lebih kecil dari detail */
+  line-height: 1.45;
+  opacity: 0.72;          /* ✅ teaser lebih subtle */
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Pills */
+.ea2-pills{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ea2-pills--peek{ margin-top: 10px; }
+
+.ea2-pill{
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 780;
+  border: 1px solid rgba(120, 90, 255, 0.16);
+  background: rgba(120, 90, 255, 0.09);
+}
+
+/* Caret (animasi halus, tidak norak) */
+.ea2-caret{
+  width: 30px;
+  height: 30px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-weight: 950;
+  font-size: 20px;
+  opacity: 0.86;
+  background: rgba(255,255,255,0.60);
+  border: 1px solid rgba(15,23,42,0.06);
+  margin-top: 2px;
+
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.ea2-caretIcon{
+  display: inline-block;
+  transform-origin: center;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+/* Saat open, caret terasa “aktif” */
+.ea2-caret.is-open{
+  transform: scale(1.04);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+}
+
+.ea2-caret.is-open .ea2-caretIcon{
+  transform: rotate(180deg);
+  opacity: 0.9;
+}
+
+/* Panel (accordion) */
+.ea2-panel{
   max-height: 0;
   opacity: 0;
   transform: translateY(-4px);
   overflow: hidden;
-  transition: max-height 220ms ease, opacity 180ms ease, transform 180ms ease;
-  padding: 0 14px;
+  transition: max-height 260ms ease, opacity 200ms ease, transform 200ms ease;
+  padding: 0 16px;
 }
 
-.ea2-panel.is-open {
-  max-height: 520px;
+.ea2-panel.is-open{
+  max-height: 720px;
   opacity: 1;
   transform: translateY(0);
-  padding: 12px 14px 14px;
+  padding: 10px 16px 14px; /* ✅ padding bawah sedikit lebih kecil */
 }
 
-.ea2-summary { font-size:0.87rem; letter-spacing: 0.09em; line-height: 1.7; opacity: 0.9; margin-bottom: 18px; }
+.ea2-summary{
+  font-size: 0.92rem;
+  line-height: 1.65;
+  opacity: 0.90;
+  margin: 10px 0 12px;
+}
 
-.ea2-label {
+.ea2-label{
   font-weight: 950;
   letter-spacing: 0.10em;
   font-size: 0.75rem;
   opacity: 0.85;
   margin-bottom: 10px;
-  line-height: 1.5;
 }
 
-.ea2-list { margin: 0; padding-left: 18px; line-height: 1.8; opacity: 0.95; }
+.ea2-list{
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.7;
+  opacity: 0.95;
+}
 
-.ea2-list li {
+.ea2-list li{
   margin-bottom: 8px;
-  font-size: 0.85rem;
-  line-height: 1.5;
+  font-size: 0.88rem;
+  line-height: 1.55;
 }
 
-
-.ea2-pill {
-  padding: 7px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 650;
-  border: 1px solid rgba(120, 90, 255, 0.18);
-  background: rgba(120, 90, 255, 0.10);
+.ea2-empty{
+  padding: 16px;
+  opacity: 0.75;
 }
 
-.ea2-pills {
-  font-size: 0.65rem;
-  padding: 0.35rem 0.7rem;
+/* =======================
+   DARK MODE (EA2)
+======================= */
+body.theme-dark .ea2-timeline{
+  background:
+    radial-gradient(1200px 400px at 20% 0%, rgba(120,90,255,0.18), transparent 60%),
+    radial-gradient(900px 300px at 90% 30%, rgba(90,180,255,0.16), transparent 55%),
+    rgba(14, 16, 26, 0.55);
+  border-color: rgba(180, 160, 255, 0.18);
 }
 
-.cert{
-  padding: 56px 0 32px;   /* atas agak lega, bawah lebih rapat */
-}
-
-.cert-title{
-  margin-bottom: 8px;     /* 🔑 jarak judul ke subjudul */
-  line-height: 1.2;
-}
-
-.cert-subtitle{
-  margin-top: 0;          /* 🔑 hilangkan jarak default <p> */
-  line-height: 1.5;
-  opacity: 0.85;
-  max-width: 720px;       /* biar teks ga kepanjangan */
-}
-
-
-.ea2-empty { padding: 16px; opacity: 0.75; }
-
-/* dark mode */
-/* ================= DARK MODE — EXPERIENCE ================= */
-body.theme-dark .ea2-item {
-  background: linear-gradient(
-    180deg,
-    #1f2333 0%,
-    #181c2a 100%
-  );
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-/* item yang sedang dibuka */
-body.theme-dark .ea2-item.is-open {
-  background: linear-gradient(180deg, #3a2a14 0%, #1c1510 100%);
-  border-color: rgba(255, 200, 90, 0.50);
-  box-shadow: 0 0 0 1px rgba(255, 200, 90, 0.16), 0 14px 40px rgba(0,0,0,0.55);
-}
-body.theme-dark .ea2-pill {
-  background: rgba(255, 200, 90, 0.13);
-  border: 1px solid rgba(255, 200, 90, 0.28);
-  color: rgba(255,255,255,0.92);
-}
-
-/* ROLE */
-body.theme-dark .ea2-role {
-  color: #ffffff;
-}
-
-/* ORGANIZATION */
-body.theme-dark .ea2-org {
-  color: #d6dcff;
-}
-
-/* PERIOD */
-body.theme-dark .ea2-period {
-  color: #b8c0ff;
-}
-
-/* LOCATION */
-body.theme-dark .ea2-location {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-body.theme-dark .ea2-panel {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-body.theme-dark .ea2-summary {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-body.theme-dark .ea2-list li {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-
-body.theme-dark .ea2-chip,
-body.theme-dark .ea2-timeline,
-body.theme-dark .ea2-row {
+body.theme-dark .ea2-row{
   background: rgba(14, 16, 26, 0.55);
   border-color: rgba(180, 160, 255, 0.18);
 }
 
-body.theme-dark .ea2-timeline::before { background: rgba(180, 160, 255, 0.22); }
-
-body.theme-dark .ea2-dot {
-  background: rgba(180, 160, 255, 0.60);
-  box-shadow: 0 0 0 4px rgba(180, 160, 255, 0.12);
+body.theme-dark .ea2-item.is-featured .ea2-row{
+  background: rgba(99, 102, 241, 0.13);
+  border-color: rgba(129, 140, 248, 0.42);
 }
 
-body.theme-dark .ea2-item.is-open .ea2-row {
-  background: rgba(180, 160, 255, 0.12);
+body.theme-dark .ea2-item.is-open .ea2-row{
+  background: rgba(180, 160, 255, 0.11);
   border-color: rgba(180, 160, 255, 0.30);
 }
 
-body.theme-dark .ea2-pill {
-  background: rgba(120, 140, 255, 0.15);
-  color: #e2e6ff;
-  border: 1px solid rgba(120, 140, 255, 0.35);
+body.theme-dark .ea2-role{ color: rgba(255,255,255,0.96); }
+body.theme-dark .ea2-org{ color: rgba(214, 220, 255, 0.92); }
+body.theme-dark .ea2-location{ color: rgba(255,255,255,0.70); }
+
+body.theme-dark .ea2-period{
+  color: rgba(191, 219, 254, 0.92);
 }
 
-
-/* ===============================
-   EA2 OPEN ITEM — NO YELLOW
-   ROSE × CHARCOAL CLEAN
-================================ */
-
-body.theme-dark .ea2-item.is-open .ea2-row {
-  background: linear-gradient(
-    180deg,
-    rgba(244,114,182,0.22),
-    rgba(12,12,16,0.96)
-  );
-  border-color: rgba(251,113,133,0.65);
-  box-shadow:
-    0 0 0 1px rgba(251,113,133,0.18),
-    0 24px 70px rgba(244,114,182,0.35);
+body.theme-dark .ea2-badge{
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.90);
 }
 
-/* CLOSED ITEM (default) */
-body.theme-dark .ea2-item:not(.is-open) {
-  background: linear-gradient(
-    180deg,
-    #141418 0%,
-    #0c0c10 100%
-  );
-  border: 1px solid rgba(244,114,182,0.22);
+body.theme-dark .ea2-badge--featured{
+  background: rgba(253, 224, 71, 0.12);
+  border-color: rgba(253, 224, 71, 0.22);
+  color: rgba(255, 244, 200, 0.92);
 }
 
-/* hover feedback */
-body.theme-dark .ea2-item:not(.is-open):hover {
-  border-color: rgba(251,113,133,0.45);
-  box-shadow: 0 18px 50px rgba(244,114,182,0.22);
+body.theme-dark .ea2-badge--current{
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.22);
 }
 
-/* pills / tags */
-body.theme-dark .ea2-pill {
-  background: rgba(244,114,182,0.18);
-  border: 1px solid rgba(251,113,133,0.38);
-  color: rgba(255,255,255,0.92);
+body.theme-dark .ea2-badge--done{
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.22);
 }
 
-/* period (tanggal kanan) */
-body.theme-dark .ea2-period {
-  color: rgba(251,113,133,0.95);
+body.theme-dark .ea2-pill{
+  background: rgba(120, 140, 255, 0.14);
+  border-color: rgba(120, 140, 255, 0.32);
+  color: rgba(226, 230, 255, 0.95);
 }
 
-/* caret (+ / -) */
-body.theme-dark .ea2-caret {
-  color: rgba(255, 255, 255, 0.6) !important;
+body.theme-dark .ea2-caret{
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.82);
 }
 
-body.theme-dark {
-  --pink: transparent;
-  --rose: transparent;
-}
+/* =======================
+   RESPONSIVE
+======================= */
+@media (max-width: 640px){
+  .ea2-title{ font-size: 1.65rem; }
 
-
-
-/* ========== IMPORTANT: MATIKAN HOVER EFEK DI BELAKANG SAAT LIGHTBOX OPEN ========== */
-body.lightbox-open .project-card,
-body.lightbox-open .project-card:hover,
-body.lightbox-open .project-thumb,
-body.lightbox-open .project-thumb:hover,
-body.lightbox-open .project-thumb img,
-body.lightbox-open .project-card:hover .project-thumb img {
-  transform: none !important;
-  filter: none !important;
-  box-shadow: none !important;
-  transition: none !important;
-}
-
-
-/* ================= DARK THEME OVERRIDES ================= */
-
-body.theme-dark .project-card {
-  background: radial-gradient(
-      circle at top left,
-      rgba(30, 64, 175, 0.28),
-      rgba(15, 23, 42, 0.96)
-    );
-  border-color: rgba(30, 64, 175, 0.55);
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(15, 23, 42, 0.9);
-}
-
-body.theme-dark .project-card:hover {
-  background: radial-gradient(
-      circle at top left,
-      rgba(59, 130, 246, 0.45),
-      rgba(15, 23, 42, 0.98)
-    );
-  border-color: rgba(129, 140, 248, 0.9);
-}
-
-body.theme-dark .project-badge {
-  background: rgba(15, 23, 42, 0.75);
-  color: rgba(191, 219, 254, 0.9);
-}
-
-body.theme-dark .project-year {
-  border-color: rgba(148, 163, 184, 0.6);
-  color: rgba(209, 213, 219, 0.9);
-}
-
-body.theme-dark .project-tag {
-  background: rgba(15, 23, 42, 0.9);
-  border-color: rgba(148, 163, 184, 0.65);
-  color: rgba(229, 231, 235, 0.98);
-}
-
-
-/* ========== DARK THEME ========== */
-body.theme-dark .project-featured {
-  background: radial-gradient(
-    circle at top left,
-    rgba(79, 70, 229, 0.25),
-    rgba(15, 23, 42, 0.98)
-  );
-  border-color: rgba(15, 23, 42, 0.9);
-  box-shadow:
-    0 22px 50px rgba(0, 0, 0, 0.9),
-    0 0 0 1px rgba(15, 23, 42, 0.9);
-}
-
-body.theme-dark .project-row {
-  background: rgba(15, 23, 42, 0.92);
-  border-color: rgba(30, 64, 175, 0.75);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.9);
-}
-
-body.theme-dark .project-tag {
-  border-color: rgba(191, 219, 254, 0.55);
-  background: rgba(15, 23, 42, 0.95);
-  color: rgba(226, 232, 240, 0.98);
-}
-
-body.theme-dark .project-badge {
-  background: rgba(129, 140, 248, 0.28);
-  color: rgba(219, 234, 254, 0.98);
-}
-
-/* Responsive */
-@media (max-width: 930px) {
-  .projects-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .project-row {
+  .ea2-top{
+    flex-direction: column;
     align-items: flex-start;
   }
 
-  .project-row-tags {
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    margin-top: 0.4rem;
+  .ea2-line{
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .ea2-org{
+    white-space: normal;
+  }
+
+  .ea2-row{
+    padding: 14px;
   }
 }
+
 
 /* Mode gelap – kartu project */
 body.theme-dark .project-card {
@@ -2877,6 +2537,146 @@ body{
       var(--bg) 55%,
       color-mix(in srgb, var(--bg-tint-1) 18%, var(--bg) 82%) 100%);
 }
+
+/* =========================
+   EDUCATION (EDU2) — 2 COL + COMPACT CARDS
+========================= */
+
+.edu2-wrap{
+  margin-top: 80px;
+  padding: 0 18px;
+}
+
+.edu2-inner{
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.edu2-head{
+  margin-bottom: 16px;
+}
+
+.edu2-title{
+  font-size: 1.6rem;
+  font-weight: 900;
+  margin: 0 0 6px;
+}
+
+.edu2-subtitle{
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  opacity: 0.7;
+}
+
+/* ✅ GRID 2 KOLOM, tapi card tidak jadi “kepanjangan” */
+.edu2-grid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: stretch;
+  margin-top: 18px;
+}
+
+/* ✅ CARD LEBIH “KOTAK” (compact) */
+.edu2-card{
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(120, 90, 255, 0.08);
+  border-radius: 20px;
+  padding: 20px 22px;
+
+  /* biar tidak terlihat “persegi panjang” */
+  min-height: 140px;         /* ⬅️ bikin terasa lebih kotak */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  box-shadow: 0 12px 30px rgba(120,110,255,0.10);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.edu2-card:hover{
+  transform: translateY(-1px);
+  border-color: rgba(120, 90, 255, 0.18);
+  box-shadow: 0 16px 36px rgba(120,110,255,0.14);
+}
+
+/* Typography */
+.edu2-degree{
+  font-size: 1.02rem;
+  font-weight: 900;
+  margin: 0 0 8px;
+  line-height: 1.25;
+}
+
+.edu2-school{
+  font-size: 0.92rem;
+  color: rgba(15,23,42,0.70);
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.edu2-meta{
+  display: flex;
+  flex-direction: column;   /* ⬅️ ini kunci */
+  gap: 2px;                 /* jarak halus */
+  font-size: 0.86rem;
+  color: rgba(15,23,42,0.58);
+  margin-top: 2px;
+}
+
+.edu2-meta--date{
+  margin: 0;                 /* hilangkan default <p> margin */
+  line-height: 2;
+}
+
+/* GPA */
+.edu2-meta--gpa{
+  margin: 0;                 /* ini penting biar ga “jatuh” */
+  line-height: 2;
+}
+
+/* ✅ Biar “GPA” rapi, tapi tetap subtle */
+.edu2-meta strong{
+  color: rgba(15,23,42,0.70);
+  font-weight: 800;
+}
+
+/* Dark mode */
+body.theme-dark .edu2-card{
+  background: rgba(14,16,26,0.55);
+  border-color: rgba(180, 160, 255, 0.16);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.35);
+}
+
+body.theme-dark .edu2-degree{
+  color: rgba(255,255,255,0.95);
+}
+
+body.theme-dark .edu2-school{
+  color: rgba(226,230,255,0.82);
+}
+
+body.theme-dark .edu2-meta{
+  color: rgba(226,230,255,0.68);
+}
+
+body.theme-dark .edu2-meta strong{
+  color: rgba(226,230,255,0.86);
+}
+
+/* Responsive: HP jadi 1 kolom */
+@media (max-width: 900px){
+  .edu2-grid{
+    grid-template-columns: 1fr;
+  }
+  .edu2-card{
+    min-height: auto;
+  }
+}
+
+
 
 /* ================================
    CERTIFICATES (ELEGANT / NO STRIP)
@@ -3084,6 +2884,292 @@ body.theme-dark .cert3-btn{
 }
 
 
+/* =========================
+   CONTACT (CT4) — CLEAN + MATCH SECTION LAYOUT
+========================= */
+
+.ct4-wrap{
+  margin-top: 80px;
+  padding: 0 18px;              /* sama seperti section lain */
+}
+
+.ct4-inner{
+  max-width: 1100px;            /* samakan dengan Education */
+  margin: 0 auto;
+}
+
+/* Header: rata kiri biar nyambung dengan Education/Experience */
+.ct4-head{
+  max-width: 760px;
+  margin: 0 0 18px;
+  text-align: left;
+  margin-bottom: 32px;
+}
+
+.ct4-kicker{
+  margin: 0 0 10px;
+  font-weight: 900;
+  letter-spacing: .28em;
+  font-size: .78rem;
+  color: rgba(120, 90, 255, .88);
+  text-transform: uppercase;
+}
+
+.ct4-title{
+  margin: 0 0 10px;
+  font-size: 1.85rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: rgba(15,23,42,.92);
+}
+
+.ct4-subtitle{
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: rgba(15,23,42,.72);
+}
+
+/* Card: lebih lebar, center, dekat ke header */
+.ct4-card{
+  width: 100%;
+  max-width: 980px;             /* ⬅️ bikin terasa “besar”, ga kecil */
+  margin: 18px auto 0;          /* center */
+  border-radius: 28px;
+  padding: 28px 30px 30px;
+
+  background: rgba(255,255,255,.68);
+  border: 1px solid rgba(120, 90, 255, .10);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 20px 55px rgba(120,110,255,.14);
+
+  transform: translateY(-10px); /* ⬅️ naik sedikit tanpa margin negatif dobel */
+}
+
+/* Field */
+.ct4-field{ margin-bottom: 14px; }
+
+.ct4-label{
+  display: block;
+  margin: 0 0 8px;
+  font-weight: 850;
+  font-size: 13px;
+  color: rgba(15,23,42,.74);
+}
+
+.ct4-input,
+.ct4-textarea{
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(120, 90, 255, .12);
+  background: rgba(255,255,255,.60);
+  padding: 12px 14px;
+  outline: none;
+
+  font-size: 14px;
+  line-height: 1.4;
+  color: rgba(15,23,42,.88);
+
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.ct4-input::placeholder,
+.ct4-textarea::placeholder{
+  color: rgba(15,23,42,.42);
+}
+
+.ct4-input:focus,
+.ct4-textarea:focus{
+  background: rgba(255,255,255,.78);
+  border-color: rgba(120, 90, 255, .30);
+  box-shadow: 0 0 0 4px rgba(120, 90, 255, .12);
+}
+
+/* Textarea */
+.ct4-textarea{
+  min-height: 140px;
+  resize: vertical;
+}
+
+/* Button */
+.ct4-btn{
+  width: 100%;
+  height: 52px;
+  margin-top: 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 90, 255, .18);
+
+  background: linear-gradient(90deg, rgba(120,90,255,.96), rgba(155,140,255,.96));
+  color: #fff;
+
+  font-weight: 950;
+  letter-spacing: .14em;
+  font-size: 13px;
+  text-transform: uppercase;
+
+  cursor: pointer;
+  box-shadow: 0 14px 34px rgba(120,90,255,.18);
+  transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+}
+
+.ct4-btn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 18px 40px rgba(120,90,255,.22);
+  filter: brightness(1.02);
+}
+
+/* Bottom: semua tengah */
+.ct4-bottom{
+  margin-top: 14px;             /* lebih dekat */
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ct4-divider{
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 14px auto 14px;
+  color: rgba(15,23,42,0.55);
+  font-size: 0.92rem;
+  justify-content: center;
+}
+
+.ct4-divider::before,
+.ct4-divider::after{
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(120,110,255,0.35), transparent);
+}
+
+/* Social icons */
+.ct4-social{
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.ct4-socialBtn{
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+
+  background: rgba(255,255,255,.62);
+  border: 1px solid rgba(120, 90, 255, .12);
+  box-shadow: 0 10px 22px rgba(120,110,255,.10);
+
+  color: rgba(15,23,42,.86);
+  font-weight: 900;
+
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.ct4-socialBtn:hover{
+  transform: translateY(-1px);
+  border-color: rgba(120, 90, 255, .22);
+  box-shadow: 0 14px 28px rgba(120,110,255,.14);
+}
+
+.ct4-copy{
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: rgba(15,23,42,.55);
+}
+
+/* Dark mode */
+body.theme-dark .ct4-title{
+  color: rgba(255,255,255,.96);
+}
+
+body.theme-dark .ct4-subtitle{
+  color: rgba(210,215,255,.78);
+}
+
+body.theme-dark .ct4-kicker{ color: rgba(180,160,255,.90); }
+
+body.theme-dark .ct4-card{
+  background: rgba(20,24,44,.65);
+  border: 1px solid rgba(160,150,255,.18);
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.55),
+    inset 0 0 0 1px rgba(255,255,255,.03);
+  backdrop-filter: blur(14px);
+}
+
+body.theme-dark .ct4-btn{
+  background: linear-gradient(90deg, #8b7bff, #a895ff);
+  box-shadow: 0 16px 36px rgba(140,120,255,.35);
+}
+
+body.theme-dark .ct4-btn:hover{
+  filter: brightness(1.06);
+}
+
+
+body.theme-dark .ct4-label{ color: rgba(226,230,255,.86); }
+
+body.theme-dark .ct4-input,
+body.theme-dark .ct4-textarea{
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.14);
+  color: rgba(255,255,255,.92);
+}
+
+body.theme-dark .ct4-input::placeholder,
+body.theme-dark .ct4-textarea::placeholder{
+  color: rgba(255,255,255,.45);
+}
+
+body.theme-dark .ct4-input:focus,
+body.theme-dark .ct4-textarea:focus{
+  border-color: rgba(150,140,255,.55);
+  box-shadow: 0 0 0 4px rgba(150,140,255,.18);
+}
+
+
+body.theme-dark .ct4-divider{ color: rgba(226,230,255,.68); }
+body.theme-dark .ct4-copy{ color: rgba(226,230,255,.55); }
+
+body.theme-dark .ct4-socialBtn{
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.16);
+  color: rgba(255,255,255,.9);
+}
+
+body.theme-dark .ct4-socialBtn:hover{
+  border-color: rgba(150,140,255,.45);
+  box-shadow: 0 14px 28px rgba(140,120,255,.35);
+}
+
+
+body.theme-dark .ct4-wrap{
+  background:
+    radial-gradient(1200px 500px at 50% -20%, rgba(140,120,255,.15), transparent),
+    linear-gradient(180deg, #0b0f1e, #090c18);
+}
+
+
+/* Mobile */
+@media (max-width: 640px){
+  .ct4-title{ font-size: 1.7rem; }
+  .ct4-card{
+    padding: 18px 16px 18px;
+    border-radius: 22px;
+    transform: translateY(-6px);
+  }
+  .ct4-divider{ max-width: 92%; }
+}
+
 
 /* ============ CONTACT SECTION ============ */
 
@@ -3186,57 +3272,367 @@ body.theme-dark .cert3-btn{
 }
 
 
+/* =========================
+   LANG SWITCH — tighter & prettier
+========================= */
+.lang-switch{
+  display:inline-flex;
+  align-items:center;
 
-/* ============ RESPONSIVE ============ */
-@media (max-width: 880px) {
-  .hero {
-    grid-template-columns: minmax(0, 1fr);
-    text-align: left;
+  /* bikin rapat */
+  gap: 6px;
+
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* globe jadi aksen kecil */
+.lang-icon{
+  width: 28px;
+  height: 28px;
+  display:grid;
+  place-items:center;
+  border-radius: 999px;
+
+  background: rgba(110,92,255,0.10);
+  box-shadow: inset 0 0 0 1px rgba(110,92,255,0.14);
+  font-size: 13px;
+  opacity: .95;
+}
+
+/* separator bikin lebih tipis + rapat */
+.sep{
+  opacity: .28;
+  font-weight: 900;
+  margin: 0 -2px;          /* ⬅️ ini bikin EN / ID makin dekat */
+}
+
+/* tombol */
+.lang-link{
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+
+  padding: 6px 10px;       /* ⬅️ lebih kecil biar rapat */
+  border-radius: 999px;
+
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: .12em;
+
+  color: rgba(20,20,30,0.62);
+  transition: transform .15s ease, background .15s ease, box-shadow .15s ease, color .15s ease;
+}
+
+.lang-link:hover{
+  transform: translateY(-1px);
+  color: rgba(20,20,30,0.88);
+}
+
+/* active: lebih “glow” halus */
+.lang-link.active{
+  color: rgba(18,16,50,0.92);
+  background: radial-gradient(120% 120% at 30% 20%,
+    rgba(150,130,255,0.42),
+    rgba(110,92,255,0.18) 55%,
+    rgba(255,255,255,0.0) 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(120,120,255,0.16),
+    0 10px 22px rgba(110,92,255,0.14);
+}
+
+/* focus */
+.lang-link:focus-visible{
+  outline:none;
+  box-shadow: 0 0 0 3px rgba(120,90,255,0.18);
+}
+
+/* =========================
+   DARK MODE
+========================= */
+.theme-dark .lang-icon{
+  background: rgba(160,160,255,0.10);
+  box-shadow: inset 0 0 0 1px rgba(160,160,255,0.16);
+}
+
+.theme-dark .lang-link{
+  color: rgba(255,255,255,0.72);
+}
+
+.theme-dark .lang-link:hover{
+  color: rgba(255,255,255,0.95);
+}
+
+.theme-dark .lang-link.active{
+  color: rgba(255,255,255,0.95);
+  background: radial-gradient(120% 120% at 30% 20%,
+    rgba(170,160,255,0.38),
+    rgba(120,110,255,0.22) 55%,
+    rgba(0,0,0,0) 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(160,160,255,0.22),
+    0 14px 28px rgba(0,0,0,0.42);
+}
+
+/* mobile */
+@media (max-width: 620px){
+  .lang-switch{ gap: 5px; }
+  .lang-icon{ width: 26px; height: 26px; font-size: 12px; }
+  .lang-link{ padding: 6px 9px; font-size: 10.5px; }
+  .sep{ margin: 0 -3px; }  /* makin rapat di hp */
+}
+
+
+/* =========================
+   FINAL RESPONSIVE + ANTI OVERLAP (Zoom 100%–150%)
+   Tempel paling bawah globals.css
+   Hapus blok mobile lama kamu biar tidak konflik
+========================= */
+
+/* ====== Base Fix (berlaku semua ukuran) ====== */
+
+/* hero fleksibel: aman saat zoom */
+.hero{
+  display: grid;
+  grid-template-columns: minmax(280px, 420px) minmax(0, 1fr);
+  gap: clamp(18px, 3vw, 48px);
+  align-items: center;
+}
+
+/* foto fleksibel */
+.avatar-wrapper{
+  width: clamp(240px, 28vw, 360px);
+  height: clamp(240px, 28vw, 360px);
+}
+
+/* header row: title + controls sejajar, tidak saling makan lebar */
+.hero-header-row{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+/* jangan pakai padding-right di desktop (itu bikin aneh saat zoom) */
+.hero-head{
+  padding-right: 0;
+  min-width: 0; /* biar text bisa ellipsis */
+}
+
+/* judul: 1 baris + aman */
+.name{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-size: clamp(36px, 4.2vw, 56px);
+  max-width: 100%;
+}
+
+/* subtitle rapi */
+.subtitle{
+  font-size: clamp(12.5px, 1.1vw, 14.5px);
+  letter-spacing: clamp(.10em, .25vw, .16em);
+  margin-top: 10px;
+  opacity: .85;
+}
+/* controls: ikut flow (ini kunci anti ketimpa saat zoom) */
+.controls-group{
+  position: static;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+/* tombol hero */
+.hero-buttons-row{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+/* contact pills wrap */
+.hero-contact-row{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.contact-pill{
+  max-width: 100%;
+}
+
+/* ============ Breakpoint “Sempit” (termasuk efek Zoom 100–150%) ============ */
+@media (max-width: 980px){
+  .hero{
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 22px;
+    padding-top: 6px;
   }
 
-  .hero-left {
+  .hero-left{
     order: -1;
+    display: grid;
+    place-items: center;
   }
 
-  .hero-header-row {
+  .avatar-wrapper{
+    width: clamp(210px, 58vw, 320px);
+    height: clamp(210px, 58vw, 320px);
+    transform: rotate(-2deg);
+  }
+
+  .hero-header-row{
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .content {
-    grid-template-columns: minmax(0, 1fr);
+  /* controls pindah ke bawah judul agar tidak nabrak */
+  .controls-group{
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
   }
 
-  .skills-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .skills-detail {
-    margin-top: 0.4rem;
-  }
-
-  .about-lists {
-    flex-direction: column;
+  /* nama tetap 1 baris, tapi font turun biar muat */
+  .name{
+    font-size: clamp(28px, 6vw, 40px);
   }
 }
 
-@media (max-width: 620px) {
-  .page {
-    padding: 2rem 1.1rem 3rem;
+/* ============ MOBILE (HP) biar tidak padat ============ */
+@media (max-width: 620px){
+  .page{
+    padding: 1.6rem 1rem 2.6rem;
   }
 
-  .avatar-wrapper {
-    width: 220px;
-    height: 220px;
+  .hero-buttons-row .btn{
+    padding: 12px 14px;
+    border-radius: 999px;
+    font-size: 14px;
   }
 
-  .card {
-    padding: 1.4rem 1.3rem;
+  .contact-pill{
+    padding: 10px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+  }
+
+  .hero-social-row{
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  /* CONTENT jadi 1 kolom */
+  .content{
+    grid-template-columns: 1fr !important;
+    gap: 18px;
+    margin-top: 22px;
+  }
+
+  .about-card{
+    padding: 18px 16px;
     border-radius: 22px;
   }
 
-  .form-row {
-    grid-template-columns: minmax(0, 1fr);
+  .about-card p{
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .about-lists{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .about-block{
+    padding: 14px 14px;
+    border-radius: 18px;
+  }
+
+  /* SKILLS 1 kolom biar lega */
+  .skills-layout{
+    grid-template-columns: 1fr !important;
+    gap: 14px;
+  }
+
+  /* skill list 2 kolom biar pendek */
+  .skills-list{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .skill-item{
+    padding: 12px 12px;
+    border-radius: 18px;
+  }
+
+  .skill-item h4{
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  .skill-item p{
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .skills-detail{
+    padding: 16px 16px;
+    border-radius: 22px;
+    min-height: unset;
+  }
+
+  .skills-detail h3{
+    font-size: 13px;
+    letter-spacing: .12em;
+  }
+
+  .skills-detail .title{
+    font-size: 22px;
+    margin-top: 10px;
+  }
+
+  .skills-detail .desc{
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .skill-tags{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .skill-tag{
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+  }
+}
+
+/* HP kecil banget */
+@media (max-width: 420px){
+  .skills-list{
+    grid-template-columns: 1fr; /* biar nggak sempit */
+  }
+  .name{
+    font-size: 26px; /* tetap 1 baris */
   }
 }
 
